@@ -1,0 +1,92 @@
+# ======================================================================
+#  Task-3 «Скажи мне, кто твой шлиф» — классификация шлифов по сортам руды
+#  Все пути относительны корня проекта. Никаких хардкодов в коде.
+# ======================================================================
+
+project:
+  name: shlif-task3
+  seed: 42
+
+paths:
+  # Имя zip-архива в корне проекта (кириллица, ищется также по маске *.zip)
+  zip: "Задача 3. Скажи мне, кто твой шлиф.zip"
+  raw_dir: data/raw
+  processed_dir: data/processed
+  index_csv: data/processed/index.csv
+  checkpoints_dir: checkpoints
+  runs_dir: runs
+
+data:
+  # Как называется папка с большими панорамами внутри архива
+  panorama_dirname: "Панорамы"
+  image_exts: [".jpg", ".jpeg", ".bmp", ".png"]
+
+  # Порядок = id класса (0..N-1). Метрики per-class считаются в этом порядке.
+  classes: [talc, regular, fine, refractory]
+
+  # Сопоставление «имя папки из данных» -> класс.
+  # Ключи сравниваются в нижнем регистре и без учёта пробелов по краям.
+  # Папки, которых нет в этом словаре, помечаются классом __unknown__ и не
+  # попадают в обучение (видно в EDA-отчёте).
+  class_map:
+    "оталькованные": talc
+    "оталькованные руды": talc
+    "области оталькования": talc
+    "рядовые": regular
+    "рядовые руды": regular
+    "тонкие": fine
+    "труднообогатимые руды": refractory
+
+  # Человекочитаемые подписи (для отчётов/оверлеев)
+  class_titles:
+    talc: "Тальк (оталькованные)"
+    regular: "Обычные срастания (рядовые)"
+    fine: "Тонкие срастания"
+    refractory: "Труднообогатимые"
+
+train:
+  backbone: efficientnet_b0     # любой из torchvision: efficientnet_b0..b3, resnet18/34/50, mobilenet_v3_large
+  pretrained: true
+  img_size: 320
+  batch_size: 16
+  epochs: 30
+  lr: 0.0003
+  weight_decay: 0.0001
+  num_folds: 5
+  early_stopping_patience: 6
+  num_workers: 0                # 0 — безопасно для Windows/CPU
+  loss: focal                   # ce | focal
+  focal_gamma: 2.0
+  class_weighted: true          # веса классов из частот (дисбаланс: рядовые >> труднообогатимые)
+  amp: false                    # CUDA нет -> смешанная точность выключена
+  scheduler: cosine             # cosine | none
+  val_metric: macro_f1          # по чему выбирать лучший чекпоинт
+
+augment:
+  hflip: 0.5
+  vflip: 0.5
+  rotate90: true
+  elastic_p: 0.2                # вероятность ElasticTransform
+  color_jitter:
+    brightness: 0.2
+    contrast: 0.2
+    saturation: 0.2
+    hue: 0.05
+
+# Тайлинг панорам для инференса (масок нет — сегментация «слабая», по тайлам)
+tiling:
+  tile_size: 512
+  overlap: 0.25                 # доля перекрытия (0..1)
+
+inference:
+  tile_size: 512
+  overlap: 0.25
+  batch_size: 16
+  # Панорамы до 574 Мп. Чтобы держать память под контролем, карту классов
+  # строим на «холсте» с максимальной стороной map_max_side (блендинг probs по overlap).
+  map_max_side: 2048
+  # Макс. сторона PNG-оверлея. Компактное превью вместо полноразмерного (десятки МБ).
+  # 0 = сохранять в полном разрешении панорамы.
+  overlay_max_side: 2048
+  # Необязательный предварительный даунсемпл чтения панорамы (1 = без него).
+  read_downsample: 1

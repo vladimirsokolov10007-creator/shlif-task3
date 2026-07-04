@@ -1,0 +1,26 @@
+# Данные и веса
+data/raw/
+data/processed/
+outputs/
+checkpoints/
+runs/
+*.zip
+*.npy
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# ОС/IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Локальные настройки Claude Code
+.claude/
