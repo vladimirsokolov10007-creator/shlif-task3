@@ -55,11 +55,26 @@ python -m src.train --config configs/config.yaml            # все фолды
 python -m src.train --fold 0 --epochs 5                     # быстрый прогон
 
 # 4. Инференс по панорамам (карта классов + доли + оверлей)
-python -m src.inference --checkpoint checkpoints/efficientnet_b0_fold0.pt --all-panoramas
+python -m src.inference --checkpoint checkpoints/efficientnet_b0_fold3.pt --all-panoramas
 
 # 5. (опц.) Демо
 pip install streamlit && streamlit run app/streamlit_app.py
 ```
+
+## Веса и данные
+
+Репозиторий содержит **только код и документацию**. Данные (~2.8 ГБ) и веса
+моделей в git не хранятся (см. `.gitignore`) — их нужно получить отдельно:
+
+- **Данные.** Исходный архив `Задача 3. Скажи мне, кто твой шлиф.zip` положите в
+  корень проекта и распакуйте шагом 1 пайплайна (`src.data.extract`). Имена
+  внутри архива в CP866 чинятся автоматически.
+- **Веса.** Обученный чекпоинт (лучший фолд, `efficientnet_b0_fold3.pt`, ~45 МБ)
+  публикуется через **GitHub Release**:
+  `https://github.com/<owner>/<repo>/releases` → скачать в `checkpoints/`.
+  Либо обучите с нуля шагом 3 (5-fold, ~4.5 ч на CPU).
+
+> Результаты 5-fold CV и состав панорам — в [RESULTS.md](RESULTS.md).
 
 ## Структура
 
